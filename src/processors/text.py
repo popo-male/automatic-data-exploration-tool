@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.express as px
+from textblob import TextBlob
 from wordcloud import WordCloud, STOPWORDS
 from collections import Counter
 import matplotlib.pyplot as plt
@@ -38,7 +39,7 @@ class TextProcessor:
         )
         return fig
 
-    def get_top_ngrams(self, column: str, n=10):
+    def get_top_ngrams(self, column: str, n_gram=1, top_n=10):
         text_data = " ".join(self.df[column].dropna().astype(str).tolist()).lower()
         words = text_data.split()
 
@@ -47,18 +48,53 @@ class TextProcessor:
             word for word in words if word not in STOPWORDS and len(word) > 2
         ]
 
-        count = Counter(filtered_words)
-        most_common = count.most_common(n)
+        if n_gram==1:
+            grams = words
+        else:
+            grams = zip(*[words[i:] for i in range(n_gram)])
+            grams = [" ".join(gram) for gram in grams]
 
-        df_frequency = pd.DataFrame(most_common, columns=["Word", "Count"])
+        count = Counter(filtered_words)
+        most_common = count.most_common(top_n)
+
+        df_frequency = pd.DataFrame(most_common, columns=["N-gram", "Count"])
+        title_map = {1: "Unigrams", 2: "Bigrams", 3: "Trigrams"}
 
         fig = px.bar(
             df_frequency,
             x="Count",
-            y="Word",
+            y="N-gram",
             orientation="h",
-            title=f"Top {n} Frequent Words",
+            title=f"Top {top_n} {title_map.get(n_gram, 'N-grams')}",
             template="plotly_white",
+            color_discrete_sequence=["#636EFA"]
         )
         fig.update_layout(yaxis=dict(autorange="reversed"))
+        return fig
+
+    def plot_sentiment(self, column: str):
+        sample = self.df[column].dropna().astype(str)
+        sentiments = sample.apply(lambda x: TextBlob(x).sentiment.polarity)  # type: ignore[attr-defined]
+
+        def get_label(score):
+            if score > 0.1:
+                return "Positive"
+            elif score < -0.1:
+                return "Negative"
+            else:
+                return "Neutral"
+
+        labels = sentiments.apply(get_label)
+        counts = labels.value_counts()
+        fig = px.pie(
+            values=counts.values,
+            names=counts.index,
+            title="Sentiment Distribution (Sampled)",
+            color=counts.index,
+            color_discrete_map={
+                "Positive": "#00CC96",  # Green
+                "Negative": "#EF553B",  # Red
+                "Neutral": "#636EFA",  # Blue
+            },
+        )
         return fig

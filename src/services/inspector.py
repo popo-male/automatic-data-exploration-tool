@@ -1,6 +1,6 @@
 import pandas as pd
 from dataclasses import dataclass
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 @dataclass
 class Metadata:
@@ -41,6 +41,18 @@ class Inspector:
             if pd.api.types.is_datetime64_any_dtype(self.df[col]):
                 datetime_cols.append(col)
                 continue
+
+            # convert object col to dateime to check compatibility
+            if self.df[col].dtype == 'object':
+                try:
+                    sample = self.df[col].dropna().head(100)
+                    if not sample.empty:
+                        pd.to_datetime(sample, errors='raise')
+                        datetime_cols.append(col)
+                        self.df[col] = pd.to_datetime(self.df[col], errors='coerce')
+                        continue
+                except (ValueError, TypeError):
+                    pass
 
             if pd.api.types.is_numeric_dtype(self.df[col]):
                 numeric_cols.append(col)

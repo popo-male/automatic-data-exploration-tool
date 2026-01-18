@@ -24,6 +24,17 @@ class NumericalProcessor:
         )
         return fig
 
+    def plot_boxplot(self, column: str):
+        """Generates a Box Plot for a numerical column."""
+        fig = px.box(
+            self.df,
+            y=column,
+            title=f"Box Plot of {column}",
+            template="plotly_white",
+            color_discrete_sequence=["#EF553B"],
+        )
+        return fig
+
     def plot_heatmap(self, cols: list):
         """Generates a heatmap for selected columns."""
         if len(cols) < 2:
