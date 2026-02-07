@@ -81,12 +81,12 @@ def main():
 
             st.session_state.schema_df = pd.DataFrame(schema_data)
 
-    # --- CONFIGURATION STAGE (Stacked & Full Width) ---
+    # --- CONFIGURATION STAGE ---
     if st.session_state.df is not None and not st.session_state.dashboard:
         st.divider()
         st.subheader("🛠️ Data Type Configuration")
 
-        # 1. Raw Data (Full Width)
+        # Raw Data
         st.markdown("##### 1. Raw Data Preview")
         st.dataframe(
             st.session_state.df.head(10),
@@ -96,7 +96,7 @@ def main():
 
         st.write("")  # Spacer
 
-        # 2. Editor (Full Width)
+        # Editor
         st.markdown("##### 2. Data Types Classification")
         st.info(
             "Select the correct **Target Type** in the table below if the detection is wrong."
@@ -142,7 +142,7 @@ def main():
                     df_working[col_name] = result
                 else:
                     has_error = True
-                    st.error(f"❌ Error in column '{col_name}': {error_msg}")
+                    st.error(f"Error in column '{col_name}': {error_msg}")
                     break
 
             progress_bar.empty()
