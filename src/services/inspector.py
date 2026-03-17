@@ -1,10 +1,12 @@
 import pandas as pd
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, cast
+
 
 @dataclass
 class Metadata:
     """data transfer object for dataset metadata"""
+
     total_rows: int
     total_columns: int
     numeric_cols: List[str]
@@ -13,8 +15,10 @@ class Metadata:
     datetime_cols: List[str]
     missing_values: Dict[str, int]
 
+
 class Inspector:
     """analyzes the dataframe to classify column types and extract metadata"""
+
     def __init__(self, df: pd.DataFrame):
         self.df = df
 
@@ -28,7 +32,7 @@ class Inspector:
             categorical_cols=categoric,
             text_cols=text,
             datetime_cols=datetime,
-            missing_values=self.df.isnull().sum().to_dict()
+            missing_values=cast(Dict[str, int], self.df.isnull().sum().to_dict()),
         )
 
     def _classify_columns(self):
@@ -43,13 +47,13 @@ class Inspector:
                 continue
 
             # convert object col to dateime to check compatibility
-            if self.df[col].dtype == 'object':
+            if self.df[col].dtype == "object":
                 try:
                     sample = self.df[col].dropna().head(100)
                     if not sample.empty:
-                        pd.to_datetime(sample, errors='raise')
+                        pd.to_datetime(sample, errors="raise")
                         datetime_cols.append(col)
-                        self.df[col] = pd.to_datetime(self.df[col], errors='coerce')
+                        self.df[col] = pd.to_datetime(self.df[col], errors="coerce")
                         continue
                 except (ValueError, TypeError):
                     pass
